@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>显示所有用户</title>
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+</head>
+<body >
+<div id="app">
+
+<button @click="showAllUser">显示所有用户</button>
+<button @click="ok=true">显示添加用户</button>
+    <div v-if="code==200">
+        <h4 style="color: red;">操作成功</h4>
+    </div>
+    <div v-if="code==400">
+        <h4 style="color: red;">操作失败</h4>
+    </div>
+
+    <hr/>
+        用户名： <input type="text" v-model="user.username" /><br/>
+        用户年龄：<input type="text" v-model="user.userage"/><br/>
+    <div v-if="ok">
+        <button @click="addUser(user.username,user.userage)">添加用户</button>
+    </div>
+    <div v-else>
+        <input type="hidden" v-model="user.id"/>
+        <button @click="modifyUserById(user.id,user.username,user.userage)">修改用户</button>
+    </div>
+    <hr/>
+    <table border="1" align="center" width="50%">
+        <tr>
+            <td>ID</td>
+            <td>用户名</td>
+            <td>年龄</td>
+            <td>操作</td>
+        </tr>
+        <tr v-for="user in userList">
+            <td>{{user.id}}</td>
+            <td>{{user.username}}</td>
+            <td>{{user.userage}}</td>
+            <td>
+                <button @click="selectUserById(user.id)" v-bind:value="user.id">修改</button>
+                <button @click='removeUserById(user.id)'v-bind:value="user.id">删除</button>
+            </td>
+        </tr>
+
+    </table>
+
+
+</div>
+<script>
+    new Vue({
+        el:'#app',
+        data:{
+            userList : null,
+            respCode : null,
+            code     : null,
+            user     : {id:null,username:null,userage:null},
+            ok       : true
+        },
+        methods:{
+            //查询所有用户
+            showAllUser:function () {
+                var ul = this;
+                axios
+                    .get('http://localhost/user/showAllUser')
+                    .then(function (response) {
+                        ul.userList = response.data;
+                    })
+                    .catch(function (err) {
+                    console.log(err);
+                });
+            },
+            //删除用户根据id
+            removeUserById:function (id) {
+                var ul = this;
+                axios
+                    .get('http://localhost/user/removeUserById?id='+id)
+                    .then(function (response) {
+                        ul.respCode = response.data;
+                        ul.userList = ul.respCode.msg;
+                        ul.code = ul.respCode.code;
+                    })
+                    .catch(function (err) {
+                        console.log(err);
+                    })
+            },
+            //添加用户
+            addUser:function (username,userage) {
+                var ul = this;
+                axios
+                    .post('http://localhost/user/addUser',{
+                            username:username,
+                            userage:userage
+                        }
+                    )
+                    .then(function (response) {
+                        ul.respCode = response.data;
+                        ul.userList = ul.respCode.msg;
+                        ul.code = ul.respCode.code;
+                    })
+                    .catch(function (err) {
+                        console.log(err);
+                    })
+            },
+            //查询单个用户
+            selectUserById: function(id){
+                this.ok = false;
+                var ul = this;
+                axios
+                    .get('http://localhost/user/selectUserById?id='+id)
+                    .then(function (response) {
+                        ul.user = response.data;
+                    })
+                    .catch(function (err) {
+                        console.log(err);
+                    })
+            },
+            modifyUserById:function (id,username,userage) {
+                var ul = this;
+                axios
+                    .post('http://localhost/user/modifyUserById',
+                        {
+                            id:id,
+                            username:username,
+                            userage:userage
+                        }
+                    )
+                    .then(function (response) {
+                        ul.respCode = response.data;
+                        ul.userList = ul.respCode.msg;
+                        ul.code = ul.respCode.code;
+                    })
+                    .catch(function (err) {
+                        console.log(err);
+                    })
+            }
+
+
+        }
+
+    })
+</script>
+</body>
+</html>
